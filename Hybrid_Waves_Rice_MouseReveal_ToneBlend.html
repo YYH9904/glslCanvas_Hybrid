@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>Hybrid Image — Mouse Reveal (Far base)</title>
+  <!-- 如果路徑不同，請改成你的 GlslCanvas.js 位置 -->
+  <script src="dist/GlslCanvas.js"></script>
+  <style>
+    html, body { height:100%; margin:0; background:#0e1316; color:#c9d4e0; }
+    body { display:flex; align-items:center; justify-content:center; }
+    #glslCanvas { width: min(90vmin, 900px); height: min(90vmin, 900px); display:block; }
+    .hint { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); opacity:.7; font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+  </style>
+</head>
+<body>
+  <canvas
+    id="glslCanvas"
+    width="800" height="800"
+    data-fragment-url="Hybrid_Waves_Rice_MouseReveal_ToneBlend.frag?v=1"
+    data-textures="data/Wavesv2_byChatGPT.png, data/Ricev3_byChatGPT.png">
+  </canvas>
+  <div class="hint">滑鼠移動：近距離細節只在滑鼠附近出現（遠景為基底）</div>
+
+  <script>
+    const canvas  = document.getElementById("glslCanvas");
+    const sandbox = new GlslCanvas(canvas);
+
+    // 1) 初始就把滑鼠設在中心，避免一開始 (0,0) 造成黑洞
+    function initMouseUniform() {
+      sandbox.setUniform("u_mouse", [canvas.width * 0.5, canvas.height * 0.5]);
+    }
+
+    // 2) 更新滑鼠座標（用相對於 canvas 的像素座標）
+    canvas.addEventListener("mousemove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * (canvas.width  / rect.width);
+      const y = (e.clientY - rect.top)  * (canvas.height / rect.height);
+      // 注意：這裡沒有翻 y，因為 shader 直接用 v_texcoord 當 uv
+      sandbox.setUniform("u_mouse", [x, y]);
+    });
+
+    // 3) 視窗縮放時，保持 u_mouse 在畫布中心（避免重排後又掉回 0,0）
+    window.addEventListener("resize", initMouseUniform);
+
+    // 初始設定
+    initMouseUniform();
+  </script>
+</body>
+</html>
