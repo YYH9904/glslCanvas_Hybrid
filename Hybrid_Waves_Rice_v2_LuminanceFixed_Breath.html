@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Hybrid Image — Waves (Low) + Rice (High)</title>
+  <script src="dist/GlslCanvas.js"></script>
+  <style>
+    html, body { height: 100%; margin: 0; background:#101515; }
+    body { display:flex; align-items:center; justify-content:center; }
+    #glslCanvas { width:800px; height:800px; display:block; }
+  </style>
+</head>
+
+<body>
+  <canvas
+    id="glslCanvas"
+    width="800" height="800"
+    data-fragment-url="Hybrid_Waves_Rice_v2_LuminanceFixed_Breath.frag?v=strong"
+    data-textures="data/Wavesv2_byChatGPT.png, data/Ricev3_byChatGPT.png">
+  </canvas>
+
+  <script>
+    const canvas = document.getElementById("glslCanvas");
+    const sandbox = new GlslCanvas(canvas);
+    
+    // 控制遠近切換速度
+    // 例：0.3 = 約 20 秒一個循環，1.0 = 約 6 秒
+    sandbox.setUniform("u_speed", 1.0); // 0.3–1.0
+  </script>
+</body>
+
+</html>
