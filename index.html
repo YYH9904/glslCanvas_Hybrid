@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Hybrid Image — Waves (Low) + Rice (High)</title>
+  <script src="dist/GlslCanvas.js"></script>
+  <style>
+    html, body { height: 100%; margin: 0; background:#101515; }
+    body { display:flex; align-items:center; justify-content:center; }
+  #glslCanvas { width:100vw; height:100vh; display:block; }
+  </style>
+</head>
+
+<body>
+
+  <canvas
+    id="glslCanvas"
+    width="800" height="800"
+    data-fragment-url="Hybrid_Waves_Rice_v2_LuminanceFixed_Breath.frag?v=strong"
+    data-textures="data/Wavesv2_byChatGPT.png, data/Ricev3_byChatGPT.png">
+  </canvas>
+
+  <script>
+    const canvas = document.getElementById("glslCanvas");
+    const sandbox = new GlslCanvas(canvas);
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      canvas.style.width = '100vw';
+      canvas.style.height = '100vh';
+      // Optionally, update uniforms if your shader uses u_resolution
+      if (sandbox) {
+        sandbox.setUniform('u_resolution', [canvas.width, canvas.height]);
+      }
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // 控制遠近切換速度
+    // 例：0.3 = 約 20 秒一個循環，1.0 = 約 6 秒
+    sandbox.setUniform("u_speed", 1.0); // 0.3–1.0
+  </script>
+</body>
+
+</html>
