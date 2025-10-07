@@ -23,7 +23,12 @@ const canvas = document.getElementById("glslCanvas");
 const sandbox = new GlslCanvas(canvas);
 
 // 初始暖色強度，可試 0.5 ~ 1.0
-sandbox.setUniform("u_tintWarm", 0.6);
+sandbox.setUniform("u_tintWarm", 0.5);
+
+// 稻的彩色高頻混合量：0=灰階細節、1=完整彩色高頻
+// 建議先從 0.35~0.6 嘗試，避免色彩太花
+sandbox.setUniform("u_riceColorMix", 0.5);
+
 
 // 初始化滑鼠在中心（像素座標）
 function initMouse(){
