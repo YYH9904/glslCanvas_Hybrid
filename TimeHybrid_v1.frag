@@ -2,44 +2,33 @@
 precision mediump float;
 #endif
 
-// ---- GlslCanvas uniforms ----
 uniform vec2  u_resolution;
-uniform vec2  u_mouse;
 uniform float u_time;
-uniform sampler2D u_tex0; // frame t
-uniform sampler2D u_tex1; // frame t+Δ
-uniform sampler2D u_tex2; // frame t+2Δ
+uniform sampler2D u_tex0;
+uniform sampler2D u_tex1;
+uniform sampler2D u_tex2;
 
-// ---- Tunables ----
-// 模糊半徑（像素）。低頻用較大的模糊，形成「時間平均」的穩定面。
-const float BLUR_LOW = 4.0;
-// 高通採用的低通半徑（像素），越大 → 高頻越只剩邊緣。
-const float BLUR_HP  = 3.0;
-
-// 頻帶權重
+// Tunables
+const float BLUR_LOW  = 4.0;
+const float BLUR_HP   = 3.0;
 const float LOW_GAIN  = 1.00;
 const float HIGH_GAIN = 1.15;
 
-// ---- 色彩：sRGB <-> linear，避免把高頻吃掉 ----
-vec3 toLinear(vec3 srgb){
-    return pow(srgb, vec3(2.2));
-}
-vec3 toSRGB(vec3 linear){
-    return pow(linear, vec3(1.0/2.2));
-}
+// sRGB <-> linear
+vec3 srgb_to_linear(vec3 s) { return pow(s, vec3(2.2)); }
+vec3 linear_to_srgb(vec3 l) { return pow(l, vec3(1.0/2.2)); }
 
-// ---- 9-tap 近似各向同性高斯（單通道），以畫布像素為尺度 ----
-vec3 blur9(sampler2D tex, vec2 uv, float radiusPx){
-    // 以畫布像素做步長，簡化不同貼圖尺寸差異
-    vec2 px = radiusPx / u_resolution; // 向量步長（比例）
-    // 權重（中心最大、對稱）
-    float w0 = 0.227027; // 0
-    float w1 = 0.194594; // 1
-    float w2 = 0.121621; // 2
-    float w3 = 0.054054; // 3
-    float w4 = 0.016216; // 4
+// 9-tap approximate Gaussian blur in screen pixel units
+vec3 blur9_rgb(sampler2D tex, vec2 uv, float radius_px){
+    vec2 px = radius_px / u_resolution;
+    float w0 = 0.227027;
+    float w1 = 0.194594;
+    float w2 = 0.121621;
+    float w3 = 0.054054;
+    float w4 = 0.016216;
 
     vec3 c = texture2D(tex, uv).rgb * w0;
+
     c += texture2D(tex, uv + vec2( px.x, 0.0)).rgb * w1;
     c += texture2D(tex, uv - vec2( px.x, 0.0)).rgb * w1;
     c += texture2D(tex, uv + vec2( 0.0, px.y)).rgb * w1;
@@ -63,44 +52,40 @@ vec3 blur9(sampler2D tex, vec2 uv, float radiusPx){
     return c;
 }
 
-// 對單張影像做 low / high 分解（線性空間）
-void decompose(sampler2D tex, vec2 uv, out vec3 low, out vec3 high){
-    vec3 src  = toLinear(texture2D(tex, uv).rgb);
-    vec3 lp   = toLinear(blur9(tex, uv, BLUR_LOW));
-    low  = lp;
-    // 高通：原圖 - 較大半徑的低通
-    vec3 lp2  = toLinear(blur9(tex, uv, BLUR_HP));
-    high = src - lp2;
+// Decompose one texture into low/high in linear space
+void decomposeLH(sampler2D tex, vec2 uv, out vec3 lowL, out vec3 highL){
+    vec3 src_srgb = texture2D(tex, uv).rgb;
+    vec3 lp_low_srgb = blur9_rgb(tex, uv, BLUR_LOW);
+    vec3 lp_hp_srgb  = blur9_rgb(tex, uv, BLUR_HP);
+
+    vec3 src = srgb_to_linear(src_srgb);
+    vec3 lpL = srgb_to_linear(lp_low_srgb);
+    vec3 lpH = srgb_to_linear(lp_hp_srgb);
+
+    lowL  = lpL;          // low frequency (bigger radius)
+    highL = src - lpH;    // high frequency = original - small-radius lowpass
 }
 
 void main(){
-    vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+    vec2 uv = gl_FragCoord.xy / u_resolution;
 
-    // 三幀分解
-    vec3 low0, hi0, low1, hi1, low2, hi2;
-    decompose(u_tex0, uv, low0, hi0);
-    decompose(u_tex1, uv, low1, hi1);
-    decompose(u_tex2, uv, low2, hi2);
+    // Low/high for 3 frames
+    vec3 l0,h0,l1,h1,l2,h2;
+    decomposeLH(u_tex0, uv, l0,h0);
+    decomposeLH(u_tex1, uv, l1,h1);
+    decomposeLH(u_tex2, uv, l2,h2);
 
-    // 低頻：時間平均（穩定的地平線與海面結構）
-    vec3 lowAvg = (low0 + low1 + low2) / 3.0;
+    // Low frequency average (stable structure)
+    vec3 lowAvg = (l0 + l1 + l2) / 3.0;
 
-    // 高頻：時間殘響（浪花與反光）
-    // 加一點微弱的時間權重，避免過度平均造成死白
-    float w0 = 0.34 + 0.06*sin(u_time*0.90 + 0.0);
-    float w1 = 0.33 + 0.06*sin(u_time*0.90 + 2.1);
-    float w2 = 0.33 + 0.06*sin(u_time*0.90 + 4.2);
-    float norm = (w0 + w1 + w2);
-    w0/=norm; w1/=norm; w2/=norm;
-    vec3 hiMix = hi0*w0 + hi1*w1 + hi2*w2;
+    // High frequency "time resonance"
+    float w0 = 0.34 + 0.06 * sin(u_time * 0.90 + 0.0);
+    float w1 = 0.33 + 0.06 * sin(u_time * 0.90 + 2.1);
+    float w2 = 0.33 + 0.06 * sin(u_time * 0.90 + 4.2);
+    float wn = w0 + w1 + w2;
+    w0 /= wn; w1 /= wn; w2 /= wn;
+    vec3 hiMix = h0*w0 + h1*w1 + h2*w2;
 
-    // 互動式「遠近感」：滑鼠 X 從 0→1，越遠越看不到高頻
-    float nearFar = clamp(u_mouse.x / max(u_resolution.x, 1.0), 0.0, 1.0);
-    float highAtten = pow(1.0 - nearFar, 1.6); // 往右（遠）→ 高頻衰減更快
-
-    // 組合
-    vec3 colorLinear = LOW_GAIN * lowAvg + HIGH_GAIN * hiMix * highAtten;
-
-    // 輸出
-    gl_FragColor = vec4( toSRGB(colorLinear), 1.0 );
+    vec3 linearCol = LOW_GAIN * lowAvg + HIGH_GAIN * hiMix;
+    gl_FragColor = vec4(linear_to_srgb(linearCol), 1.0);
 }

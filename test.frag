@@ -11,9 +11,11 @@ varying vec2 v_texcoord;
 vec3 blur(sampler2D tex, vec2 uv, float sigma) {
     vec3 sum = vec3(0.0);
     float total = 0.0;
-    for (float x = -8.0; x <= 8.0; x++) {
-        for (float y = -8.0; y <= 8.0; y++) {
-            float w = exp(-(x*x + y*y) / (2.0 * sigma * sigma));
+    for (int ix = -8; ix <= 8; ++ix) {
+        float x = float(ix);
+        for (int iy = -8; iy <= 8; ++iy) {
+            float y = float(iy);
+            float w = exp(-(x * x + y * y) / (2.0 * sigma * sigma));
             sum += texture2D(tex, uv + vec2(x, y) / u_resolution).rgb * w;
             total += w;
         }

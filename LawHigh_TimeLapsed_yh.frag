@@ -15,7 +15,8 @@ vec3 blur(sampler2D tex, vec2 uv, float radius) {
     vec3 sum = vec3(0.0);
     float total = 0.0;
     float sigma = radius;
-    for (float x = -8.0; x <= 8.0; x++) {
+    for (int ix = -8; ix <= 8; ++ix) {
+        float x = float(ix);
         float w = exp(-x * x / (2.0 * sigma * sigma));
         sum += texture2D(tex, uv + vec2(x / u_resolution.x, 0.0)).rgb * w;
         total += w;

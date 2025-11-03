@@ -2,25 +2,37 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>Hybrid Image — Time-Lapse Waves</title>
+  <title>Time-Hybrid (3 frames)</title>
   <script src="dist/GlslCanvas.js"></script>
   <style>
-    html, body { height: 100%; margin: 0; background:#101515; }
-    body { display:flex; align-items:center; justify-content:center; }
-    #glslCanvas { width:auto; height:auto; max-width:100vw; max-height:100vh; display:block; }
+    html, body { margin:0; height:100%; background:#101515; }
+    /* 讓畫面隨視窗大小更動 */
+    #glslCanvas { width:100vw; height:100vh; display:block; }
   </style>
 </head>
 <body>
   <canvas id="glslCanvas"
     data-fragment-url="TimeHybrid_v1.frag"
-    width="600" height="400"
     data-textures="data/TimeLapse1.JPG, data/TimeLapse2.JPG, data/TimeLapse3.JPG">
   </canvas>
 
   <script>
-    const canvas = document.getElementById("glslCanvas");
+    const canvas  = document.getElementById('glslCanvas');
     const sandbox = new GlslCanvas(canvas);
+
+    function resizeCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      // clientWidth/Height 來自 CSS（vw/vh），用 dpr 提升銳利度
+      const w = Math.max(1, Math.floor(canvas.clientWidth  * dpr));
+      const h = Math.max(1, Math.floor(canvas.clientHeight * dpr));
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width  = w;
+        canvas.height = h;
+      }
+    }
+    // 初次與視窗改變時都更新
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
   </script>
 </body>
 </html>
-
