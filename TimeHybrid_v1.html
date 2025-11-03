@@ -1,29 +1,26 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-
 <head>
   <meta charset="utf-8" />
-  <title>Hybrid Image — Waves (Low) + Rice (High)</title>
+  <title>Hybrid Image — Time-Lapse Waves</title>
   <script src="dist/GlslCanvas.js"></script>
   <style>
     html, body { height: 100%; margin: 0; background:#101515; }
     body { display:flex; align-items:center; justify-content:center; }
-    #glslCanvas { width:800px; height:800px; display:block; }
+    #glslCanvas { width:auto; height:auto; max-width:100vw; max-height:100vh; display:block; }
   </style>
 </head>
-
 <body>
   <canvas id="glslCanvas"
-    data-fragment-url="TimeHybrid3.frag"
-    width="1280" height="853"
+    data-fragment-url="TimeHybrid_v1.frag"
+    width="600" height="400"
     data-textures="data/TimeLapse1.JPG, data/TimeLapse2.JPG, data/TimeLapse3.JPG">
   </canvas>
-  <script src="dist/GlslCanvas.js"></script>
-  
+
   <script>
     const canvas = document.getElementById("glslCanvas");
     const sandbox = new GlslCanvas(canvas);
+  </script>
 </body>
-
 </html>
 
