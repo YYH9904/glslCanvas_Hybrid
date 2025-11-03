@@ -13,18 +13,16 @@
 </head>
 
 <body>
-  <canvas
-    id="glslCanvas"
-    width="800" height="800"
-    data-fragment-url="Mid_Hybrid_Waves_TimeLapse.frag?v=strong"
-    data-textures="data/Wavesv2_byChatGPT.png, data/Ricev3_byChatGPT.png">
+  <canvas id="glslCanvas"
+    data-fragment-url="TimeHybrid3.frag"
+    width="1280" height="853"
+    data-textures="data/TimeLapse1.JPG, data/TimeLapse2.JPG, data/TimeLapse3.JPG">
   </canvas>
-
+  <script src="dist/GlslCanvas.js"></script>
+  
   <script>
     const canvas = document.getElementById("glslCanvas");
     const sandbox = new GlslCanvas(canvas);
-    // 這版不需 backbuffer / u_speed；純靜態 hybrid
-  </script>
 </body>
 
 </html>
