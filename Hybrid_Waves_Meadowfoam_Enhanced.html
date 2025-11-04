@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Hybrid Image — Waves (Low) + Rice (High)</title>
+  <script src="dist/GlslCanvas.js"></script>
+  <style>
+    html, body { height: 100%; margin: 0; background:#101515; }
+    body { display:flex; align-items:center; justify-content:center; }
+    #glslCanvas { width:800px; height:800px; display:block; }
+  </style>
+</head>
+
+<body>
+  <canvas
+    id="glslCanvas"
+    width="800" height="800"
+    data-fragment-url="Hybrid_Waves_Meadowfoam_Enhanced.frag?v=strong"
+    data-textures="data/SND.JPG, data/Meadowfoamv3_byChatGPT.png">
+  </canvas>
+
+  <script>
+    const canvas = document.getElementById("glslCanvas");
+    const sandbox = new GlslCanvas(canvas);
+    // 這版不需 backbuffer / u_speed；純靜態 hybrid
+  </script>
+</body>
+
+</html>

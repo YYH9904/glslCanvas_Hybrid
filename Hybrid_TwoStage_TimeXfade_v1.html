@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>Hybrid — A: Waves×Rice → B: SND×Meadow (Low-then-High)</title>
+  <script src="dist/GlslCanvas.js"></script>
+  <style>
+    html, body { height:100%; margin:0; background:#101515; }
+    body { display:flex; align-items:center; justify-content:center; }
+    #glslCanvas { width:min(92vmin,1200px); height:min(92vmin,1200px); display:block; }
+  </style>
+</head>
+<body>
+  <canvas id="glslCanvas" width="1200" height="1200"
+    data-fragment-url="test.frag"
+    data-textures="data/Wavesv2_byChatGPT.png, data/Ricev3_byChatGPT.png, data/SND.JPG, data/Meadowfoamv3_byChatGPT.png">
+  </canvas>
+
+  <script>
+    const c = document.getElementById("glslCanvas");
+    const sandbox = new GlslCanvas(c);
+
+    sandbox.on('load', () => {
+      // —— 節奏（較慢，先看清楚 低→芒花，再落到 B）
+      sandbox.setUniform("u_holdA",     4.0); // A 組停留
+      sandbox.setUniform("u_xfadeLow",  4.0); // Stage-1：只換低頻 Waves→Meadow
+      sandbox.setUniform("u_pauseMid",  2.0); // 中場停
+      sandbox.setUniform("u_xfadeToB",  5.0); // Stage-2：收束到 B（高：Rice→Meadow；低：Meadow→SND）
+      sandbox.setUniform("u_holdB",     5.0); // B 組停留
+      sandbox.setUniform("u_loopGap",   1.0);
+      sandbox.setUniform("u_loop",      1.0);
+
+      // —— 濾波強度（可微調到你最像舊版的觀感）
+      sandbox.setUniform("u_lowSigmaA", 12.0); // Wavesv2 低通
+      sandbox.setUniform("u_highSigmaA", 3.0); // Ricev3 取高頻時的低通
+      sandbox.setUniform("u_lowSigmaB",  9.0); // SND 低通
+      sandbox.setUniform("u_highSigmaB", 2.2); // Meadow 取高頻時的低通
+
+      // —— 高頻增益（乘性增益法）
+      sandbox.setUniform("u_highGainA", 1.20); // 稻浪細節強度
+      sandbox.setUniform("u_highGainB", 0.95); // 芒花細節強度
+
+      // —— 輸出
+      sandbox.setUniform("u_lowContrast", 1.00);
+      sandbox.setUniform("u_outGamma",    2.2);
+      sandbox.setUniform("u_outClamp",    1.0);
+    });
+  </script>
+</body>
+</html>

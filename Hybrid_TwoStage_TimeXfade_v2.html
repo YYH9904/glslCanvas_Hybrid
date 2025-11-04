@@ -12,7 +12,8 @@
 </head>
 <body>
   <canvas id="glslCanvas" width="1200" height="1200"
-    data-fragment-url="Hybrid_Cycle_Final.frag"
+    data-fragment-url="Hybrid_TwoStage_TimeXfade_v2
+    .frag"
     data-textures="data/Wavesv2_byChatGPT.png, data/Ricev3_byChatGPT.png, data/SND.JPG, data/Meadowfoamv3_byChatGPT.png">
   </canvas>
 
@@ -32,11 +33,6 @@
         sandbox.setUniform("u_xfadeBack",  8.0); // Stage-4：回 A
         sandbox.setUniform("u_loopGap",    2.0);
         sandbox.setUniform("u_loop",       1.0);
-
-        sandbox.setUniform("u_overlap2", 0.35); // 0.3~0.5 之間很自然
-        sandbox.setUniform("u_powIn2",   1.8);  // 海浪2 淡入更慢
-        sandbox.setUniform("u_powOut2",  1.2);  // 稻浪/芒花 淡出較緩
-
 
         // —— A 段：增強稻浪紋理、淡化海
         sandbox.setUniform("u_lowSigmaA", 18.0); // 海(低頻)更糊，遠看更像海

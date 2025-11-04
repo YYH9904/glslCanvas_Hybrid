@@ -33,18 +33,13 @@
         sandbox.setUniform("u_loopGap",    2.0);
         sandbox.setUniform("u_loop",       1.0);
 
-        sandbox.setUniform("u_overlap2", 0.35); // 0.3~0.5 之間很自然
-        sandbox.setUniform("u_powIn2",   1.8);  // 海浪2 淡入更慢
-        sandbox.setUniform("u_powOut2",  1.2);  // 稻浪/芒花 淡出較緩
-
-
         // —— A 段：增強稻浪紋理、淡化海
         sandbox.setUniform("u_lowSigmaA", 18.0); // 海(低頻)更糊，遠看更像海
         sandbox.setUniform("u_highSigmaA", 1.8); // 稻浪高頻更銳
-        sandbox.setUniform("u_highGainA",  1.45);// 稻浪細節更立體
+        sandbox.setUniform("u_highGainA",  1.2);// 稻浪細節更立體
 
         // —— B 段維持柔和
-        sandbox.setUniform("u_lowSigmaB",   9.0);
+        sandbox.setUniform("u_lowSigmaB",   14.0);
         sandbox.setUniform("u_highSigmaB",  2.2);
         sandbox.setUniform("u_highGainB",   0.95);
 

@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Hybrid Image — Waves ⇄ Rice (Local GLSLCanvas)</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial;
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      min-height: 100vh;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    aside {
+      background: rgba(0,0,0,0.03);
+      padding: 16px;
+      border-left: 1px solid rgba(0,0,0,0.08);
+    }
+    .row { margin: 16px 0; }
+    label { font-size: 14px; display:block; margin-bottom:6px; }
+    input[type="range"] { width: 100%; }
+    .val { font-family: ui-monospace, monospace; }
+    .small { font-size: 12px; opacity: .7; }
+  </style>
+</head>
+<body>
+  <!-- 🔹 主畫布 -->
+  <canvas id="glslCanvas"
+    data-fragment-url="Hybrid_Waves_Rice_v3_RGB.frag"
+    data-textures="data/SND.JPG,data/Meadowfoam_byChatGPT.png">
+  </canvas>
+
+  <!-- 🔹 右側控制面板 -->
+  <aside>
+    <h2>Hybrid Controls</h2>
+
+    <div class="row">
+      <label for="gain">u_detailGain <span class="val" id="gainVal">10.0</span></label>
+      <input id="gain" type="range" min="0" max="24" step="0.1" value="10.0"/>
+      <div class="small">放大「稻田高頻細節」的強度。</div>
+    </div>
+
+    <div class="row">
+      <label for="mix">u_mixRatio <span class="val" id="mixVal">0.6</span></label>
+      <input id="mix" type="range" min="0" max="1" step="0.01" value="0.6"/>
+      <div class="small">稻田原色與海色的比例。</div>
+    </div>
+  </aside>
+
+  <!-- 🔹 引用本地 glslCanvas.js -->
+  <script src="dist/glslCanvas.js"></script>
+
+  <script>
+    const canvas = document.getElementById('glslCanvas');
+    const sandbox = new GlslCanvas(canvas);
+
+    // 初始值
+    const uniforms = {
+      u_detailGain: 10.0,
+      u_mixRatio: 0.6
+    };
+
+    // 推送 uniforms
+    function pushUniforms() {
+      for (const k in uniforms) sandbox.setUniform(k, uniforms[k]);
+    }
+
+    // 自動調整解析度
+    function fit() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const rect = canvas.getBoundingClientRect();
+      const w = Math.floor(rect.width  * dpr);
+      const h = Math.floor(rect.height * dpr);
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w; canvas.height = h;
+        sandbox.setUniform("u_resolution", w, h);
+      }
+    }
+    new ResizeObserver(fit).observe(canvas);
+    window.addEventListener('load', () => { fit(); pushUniforms(); });
+
+    // 控制面板事件
+    const gain = document.getElementById('gain');
+    const mix = document.getElementById('mix');
+    const gainVal = document.getElementById('gainVal');
+    const mixVal = document.getElementById('mixVal');
+
+    function setGain(v){
+      uniforms.u_detailGain = parseFloat(v);
+      gainVal.textContent = uniforms.u_detailGain.toFixed(2);
+      sandbox.setUniform("u_detailGain", uniforms.u_detailGain);
+    }
+    function setMix(v){
+      uniforms.u_mixRatio = parseFloat(v);
+      mixVal.textContent = uniforms.u_mixRatio.toFixed(2);
+      sandbox.setUniform("u_mixRatio", uniforms.u_mixRatio);
+    }
+
+    gain.addEventListener("input", e => setGain(e.target.value));
+    mix.addEventListener("input",  e => setMix(e.target.value));
+  </script>
+</body>
+</html>
+

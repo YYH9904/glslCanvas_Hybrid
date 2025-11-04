@@ -1,39 +1,159 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="zh-Hant">
 <head>
-    <meta charset="utf-8">
-    <title>GlslCanvas</title>
-    <script type="text/javascript" src="dist/GlslCanvas.js"></script>
-    <style>
-        body {
-            margin: 0;
-            background: #101515;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh; /* 讓 body 撐滿視窗高度 */
-        }
-        #glslCanvas {
-            max-width: 100%;
-            max-height: 100%;
-            width: auto;
-            height: auto;
-            display: block;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <title>風的姿態｜單頁切換版</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <script src="dist/GlslCanvas.js"></script>
+  <style>
+    :root {
+      --bg:#101515; --fg:#e8f0f0; --muted:#94a3a3;
+      --glass:rgba(20,30,30,.55); --glass-hover:rgba(28,40,40,.72);
+      --radius:14px; --shadow:0 10px 30px rgba(0,0,0,.35);
+      --accent:#99f6e4;
+    }
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg)}
+    body{display:flex;align-items:center;justify-content:center}
+    #stage{
+      width:min(92vmin,1200px); height:min(92vmin,1200px);
+      position:relative; border-radius:var(--radius); overflow:hidden;
+      box-shadow:var(--shadow);
+    }
+    canvas{display:block;width:100%;height:100%}
+
+    .dock{
+      position:absolute; right:14px; bottom:14px; display:flex; flex-direction:column; gap:10px;
+      font-family:ui-sans-serif,system-ui,-apple-system,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+      z-index:2;
+    }
+    .btn{
+      appearance:none; border:1px solid rgba(255,255,255,.08);
+      background:var(--glass); color:var(--fg); padding:10px 14px;
+      border-radius:999px; font-size:14px; line-height:1; cursor:pointer;
+      backdrop-filter:blur(8px); box-shadow:0 6px 16px rgba(0,0,0,.25);
+      transition:.2s ease; text-align:left; white-space:nowrap;
+    }
+    .btn:hover,.btn:focus-visible{background:var(--glass-hover); transform:translateY(-1px)}
+    .btn.active{outline:2px solid var(--accent); color:var(--accent)}
+
+    .badge{
+      position:absolute; left:14px; top:14px; z-index:2;
+      background:var(--glass); border:1px solid rgba(255,255,255,.08);
+      padding:8px 12px; border-radius:999px; font-size:12px; color:var(--muted);
+      backdrop-filter:blur(8px);
+    }
+  </style>
 </head>
 <body>
-    <canvas id="glslCanvas" data-fragment-url="LPHP_Combine.frag" width="900" height="600" data-textures="data/Waves_byChatGPT.png, data/Rice_byChatGPT.png"></canvas>
+  <div id="stage" role="figure" aria-label="《風的姿態》單頁切換">
+    <div class="badge" id="badge">《風的姿態》</div>
+
+    <div class="dock" aria-label="作品切換">
+      <button class="btn active" id="btnDynamic">風的姿態（動態）</button>
+      <button class="btn" id="btnI">風的姿態 I：大地的呼吸</button>
+      <button class="btn" id="btnII">風的姿態 II：海的光芒</button>
+    </div>
+  </div>
+
+  <script>
+    const stage = document.getElementById('stage');
+    const badge = document.getElementById('badge');
+
+    let sandbox = null, canvas = null, ro = null;
+
+    function createCanvas(fragUrl, textures, dpiAware=true){
+      if (ro) { try{ ro.disconnect(); }catch(e){} ro=null; }
+      if (sandbox && sandbox.destroy) { try{ sandbox.destroy(); }catch(e){} }
+      if (canvas && canvas.remove) canvas.remove();
+
+      canvas = document.createElement('canvas');
+      canvas.id = 'glslCanvas';
+      canvas.setAttribute('data-fragment-url', fragUrl);
+      canvas.setAttribute('data-textures', textures.join(', '));
+      canvas.width = 1200; canvas.height = 1200;
+      stage.insertBefore(canvas, stage.firstChild);
+
+      sandbox = new GlslCanvas(canvas);
+
+      const fit = () => {
+        const r = (dpiAware ? (window.devicePixelRatio || 1) : 1);
+        const rect = canvas.getBoundingClientRect();
+        canvas.width  = Math.max(2, Math.round(rect.width  * r));
+        canvas.height = Math.max(2, Math.round(rect.height * r));
+      };
+      ro = new ResizeObserver(fit); ro.observe(stage); fit();
+
+      return sandbox;
+    }
+
+    // 三個模式的載入器
+    function loadDynamic(){
+      badge.textContent = '《風的姿態》';
+      const s = createCanvas(
+        'Hybrid_Cycle_Final.frag',
+        ['data/Wavesv2_byChatGPT.png','data/Ricev3_byChatGPT.png','data/SND.JPG','data/Meadowfoamv3_byChatGPT.png']
+      );
+      s.on('load', () => {
+        s.setUniform("u_holdA",6.0);
+        s.setUniform("u_xfadeLow",10.0);
+        s.setUniform("u_pause1",4.0);
+        s.setUniform("u_xfadeToB",8.0);
+        s.setUniform("u_holdB",6.0);
+        s.setUniform("u_xfadeHigh",10.0);
+        s.setUniform("u_pause2",4.0);
+        s.setUniform("u_xfadeBack",8.0);
+        s.setUniform("u_loopGap",2.0);
+        s.setUniform("u_loop",1.0);
+
+        s.setUniform("u_lowSigmaA",18.0);
+        s.setUniform("u_highSigmaA",1.8);
+        s.setUniform("u_highGainA",1.2);
+
+        s.setUniform("u_lowSigmaB",14.0);
+        s.setUniform("u_highSigmaB",2.2);
+        s.setUniform("u_highGainB",0.95);
+
+        s.setUniform("u_satLowA",0.82);
+        s.setUniform("u_contrastLowA",0.92);
+
+        s.setUniform("u_outGamma",2.2);
+        s.setUniform("u_outClamp",1.0);
+      });
+    }
+
+    // ↓↓↓ 這裡對調了 ↓↓↓
+    function loadI(){
+      // 「大地的呼吸」 → 原本的「海的光芒」（SND×Meadowfoam）
+      badge.textContent = '《風的姿態》';
+      createCanvas(
+        'Hybrid_Luminance.frag',
+        ['data/SND.JPG','data/Meadowfoamv3_byChatGPT.png']
+      );
+    }
+
+    function loadII(){
+      // 「海的光芒」 → 原本的「大地的呼吸」（Waves×Rice）
+      badge.textContent = '《風的姿態》';
+      createCanvas(
+        'Hybrid_Luminance.frag?v=strong',
+        ['data/Wavesv2_byChatGPT.png','data/Ricev3_byChatGPT.png']
+      );
+    }
+    // ↑↑↑ 對調結束 ↑↑↑
+
+    const btnDynamic = document.getElementById('btnDynamic');
+    const btnI = document.getElementById('btnI');
+    const btnII = document.getElementById('btnII');
+
+    function setActive(btn){
+      [btnDynamic, btnI, btnII].forEach(b => b.classList.toggle('active', b===btn));
+    }
+
+    btnDynamic.addEventListener('click', () => { setActive(btnDynamic); loadDynamic(); });
+    btnI.addEventListener('click', () => { setActive(btnI); loadI(); });
+    btnII.addEventListener('click', () => { setActive(btnII); loadII(); });
+
+    loadDynamic();
+  </script>
 </body>
-<script>
-    var canvas = document.getElementById("glslCanvas");
-    var sandbox = new GlslCanvas(canvas);
-    var texCounter = 0;
-    var sandbox_content = "";
-    var sandbox_title = "";
-    var sandbox_author = "";
-    var sandbox_thumbnail = "";
-    // 移除強制 canvas.style.width/height = 100%
-</script>
 </html>
