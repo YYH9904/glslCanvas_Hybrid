@@ -1,5 +1,5 @@
-// title: 
-// description: A Cycle with Wind and 
+// title: When the Wind Remembers
+// description: A cycle of landscapes seen through breath and distance.
 // author: YaHan Yang
 // demoURL: https://github.com/YYH9904/glslCanvas_Hybrid.git
 
