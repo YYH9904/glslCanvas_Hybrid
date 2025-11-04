@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>Hybrid — 呼吸循環版 (Waves×Rice → B → 回A)</title>
+  <script src="dist/GlslCanvas.js"></script>
+  <style>
+    html, body { height:100%; margin:0; background:#101515; }
+    body { display:flex; align-items:center; justify-content:center; }
+    #glslCanvas { width:min(92vmin,1200px); height:min(92vmin,1200px); display:block; }
+  </style>
+</head>
+<body>
+  <canvas id="glslCanvas" width="1200" height="1200"
+    data-fragment-url="Hybrid_Cycle_Final.frag"
+    data-textures="data/Wavesv2_byChatGPT.png, data/Ricev3_byChatGPT.png, data/SND.JPG, data/Meadowfoamv3_byChatGPT.png">
+  </canvas>
+
+  <script>
+    const c = document.getElementById("glslCanvas");
+    const sandbox = new GlslCanvas(c);
+
+    sandbox.on('load', () => {
+        // —— 超慢、超柔（秒）
+        sandbox.setUniform("u_holdA",      6.0);
+        sandbox.setUniform("u_xfadeLow",  10.0); // Stage-1：先換低頻（海→芒）
+        sandbox.setUniform("u_pause1",     4.0);
+        sandbox.setUniform("u_xfadeToB",   8.0); // 收束到 B
+        sandbox.setUniform("u_holdB",      6.0);
+        sandbox.setUniform("u_xfadeHigh", 10.0); // Stage-3：只換高頻（芒→海1）
+        sandbox.setUniform("u_pause2",     4.0);
+        sandbox.setUniform("u_xfadeBack",  8.0); // Stage-4：回 A
+        sandbox.setUniform("u_loopGap",    2.0);
+        sandbox.setUniform("u_loop",       1.0);
+
+        // —— A 段：增強稻浪紋理、淡化海
+        sandbox.setUniform("u_lowSigmaA", 18.0); // 海(低頻)更糊，遠看更像海
+        sandbox.setUniform("u_highSigmaA", 1.8); // 稻浪高頻更銳
+        sandbox.setUniform("u_highGainA",  1.2);// 稻浪細節更立體
+
+        // —— B 段維持柔和
+        sandbox.setUniform("u_lowSigmaB",   14.0);
+        sandbox.setUniform("u_highSigmaB",  2.2);
+        sandbox.setUniform("u_highGainB",   0.95);
+
+        // —— A 段低頻去飽和＆低對比（淡化海的色調與紋理）
+        sandbox.setUniform("u_satLowA",     0.82); // 0=灰階, 1=原彩
+        sandbox.setUniform("u_contrastLowA",0.92); // <1 降對比
+
+        // —— 出圖
+        sandbox.setUniform("u_outGamma",    2.2);
+        sandbox.setUniform("u_outClamp",    1.0);
+    });
+
+  </script>
+</body>
+</html>
