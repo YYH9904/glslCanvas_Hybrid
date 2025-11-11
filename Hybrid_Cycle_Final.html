@@ -38,6 +38,15 @@
         sandbox.setUniform("u_highSigmaA", 1.8); // 稻浪高頻更銳
         sandbox.setUniform("u_highGainA",  1.2);// 稻浪細節更立體
 
+        // 讓 2b 更順：三個新參數
+        sandbox.setUniform("u_overlap2", 0.40); // 低頻三向交疊量，0.3~0.5
+        sandbox.setUniform("u_powIn2",   1.8);  // 海浪2 淡入曲線（越大越慢）
+        sandbox.setUniform("u_powOut2",  1.2);  // 稻/芒 淡出曲線（越大越慢）
+
+        // 色度滯後（先保留芒花的色彩，紋理先淡）：0~0.5 建議 0.18
+        sandbox.setUniform("u_chromaLag2b", 0.18);
+
+
         // —— B 段維持柔和
         sandbox.setUniform("u_lowSigmaB",   14.0);
         sandbox.setUniform("u_highSigmaB",  2.2);

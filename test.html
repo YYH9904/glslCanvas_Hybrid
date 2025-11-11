@@ -12,7 +12,7 @@
 </head>
 <body>
   <canvas id="glslCanvas" width="1200" height="1200"
-    data-fragment-url="Hybrid_Cycle_Final.frag"
+    data-fragment-url="Hybrid_BreathCycle_40s.frag"
     data-textures="data/Wavesv2_byChatGPT.png, data/Ricev3_byChatGPT.png, data/SND.JPG, data/Meadowfoamv3_byChatGPT.png">
   </canvas>
 
@@ -33,18 +33,35 @@
         sandbox.setUniform("u_loopGap",    2.0);
         sandbox.setUniform("u_loop",       1.0);
 
-        sandbox.setUniform("u_overlap2", 0.35); // 0.3~0.5 之間很自然
-        sandbox.setUniform("u_powIn2",   1.8);  // 海浪2 淡入更慢
-        sandbox.setUniform("u_powOut2",  1.2);  // 稻浪/芒花 淡出較緩
+        sandbox.setUniform("u_timeScale", 1.0); // 1x = 40秒；0.5x = 80秒慢版
+        sandbox.setUniform("u_lowSigmaA", 18.0);
+        sandbox.setUniform("u_highSigmaA", 2.0);
+        sandbox.setUniform("u_highGainA", 1.3);
+        sandbox.setUniform("u_lowSigmaB", 9.0);
+        sandbox.setUniform("u_highSigmaB", 2.2);
+        sandbox.setUniform("u_highGainB", 0.95);
+        sandbox.setUniform("u_satLowA", 0.82);
+        sandbox.setUniform("u_contrastLowA", 0.9);
+        sandbox.setUniform("u_outGamma", 2.2);
+        sandbox.setUniform("u_outClamp", 1.0);
 
 
         // —— A 段：增強稻浪紋理、淡化海
         sandbox.setUniform("u_lowSigmaA", 18.0); // 海(低頻)更糊，遠看更像海
         sandbox.setUniform("u_highSigmaA", 1.8); // 稻浪高頻更銳
-        sandbox.setUniform("u_highGainA",  1.45);// 稻浪細節更立體
+        sandbox.setUniform("u_highGainA",  1.2);// 稻浪細節更立體
+
+        // 讓 2b 更順：三個新參數
+        sandbox.setUniform("u_overlap2", 0.40); // 低頻三向交疊量，0.3~0.5
+        sandbox.setUniform("u_powIn2",   1.8);  // 海浪2 淡入曲線（越大越慢）
+        sandbox.setUniform("u_powOut2",  1.2);  // 稻/芒 淡出曲線（越大越慢）
+
+        // 色度滯後（先保留芒花的色彩，紋理先淡）：0~0.5 建議 0.18
+        sandbox.setUniform("u_chromaLag2b", 0.18);
+
 
         // —— B 段維持柔和
-        sandbox.setUniform("u_lowSigmaB",   9.0);
+        sandbox.setUniform("u_lowSigmaB",   14.0);
         sandbox.setUniform("u_highSigmaB",  2.2);
         sandbox.setUniform("u_highGainB",   0.95);
 
